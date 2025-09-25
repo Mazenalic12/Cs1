@@ -102,11 +102,6 @@ resource "google_cloud_run_service" "frontend" {
   }
 }
 
-# ---- Optioneel: IAM openstellen ----
-# resource "google_cloud_run_service_iam_member" "noauth" {
-#   location = google_cloud_run_service.frontend.location
-#   service  = google_cloud_run_service.frontend.name
-#   role     = "roles/run.invoker"
-#   member   = "allUsers"
-# }
+
+
 
