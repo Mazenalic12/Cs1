@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "google" {
-  project = "cs1-472313"   # vervang door jouw project ID
+  project = "cs1-472313"   
   region  = "europe-west1"
   zone    = "europe-west1-b"
 }
@@ -76,4 +76,5 @@ resource "google_service_networking_connection" "private_vpc_connection" {
     google_project_service.servicenetworking
   ]
 }
+
 
