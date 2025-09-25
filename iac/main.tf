@@ -77,30 +77,8 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   ]
 }
 
-# ---- Cloud Run service ----
-resource "google_cloud_run_service" "frontend" {
-  name     = "frontend-service"
-  location = "europe-west1"
-  project  = "cs1-mzn-12345" # ✅ AANGEPAST
 
-  lifecycle {
-    prevent_destroy = false
-    ignore_changes  = all
-  }
 
-  template {
-    spec {
-      containers {
-        image = "gcr.io/cloudrun/hello"
-      }
-    }
-  }
-
-  traffic {
-    percent         = 100
-    latest_revision = true
-  }
-}
 
 
 
