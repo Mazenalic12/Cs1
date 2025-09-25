@@ -9,20 +9,20 @@ terraform {
 }
 
 provider "google" {
-  project = "cs1-472313"   
+  project = "cs1-mzn-12345"   # ✅ JOUW NIEUWE PROJECT ID
   region  = "europe-west1"
   zone    = "europe-west1-b"
 }
 
 # ---- APIs activeren ----
 resource "google_project_service" "servicenetworking" {
-  project            = "csi-472313"
+  project            = "cs1-mzn-12345"  # ✅ AANGEPAST
   service            = "servicenetworking.googleapis.com"
   disable_on_destroy = false
 }
 
 resource "google_project_service" "sqladmin" {
-  project            = "csi-472313"
+  project            = "cs1-mzn-12345"  # ✅ AANGEPAST
   service            = "sqladmin.googleapis.com"
   disable_on_destroy = false
 }
@@ -76,5 +76,3 @@ resource "google_service_networking_connection" "private_vpc_connection" {
     google_project_service.servicenetworking
   ]
 }
-
-
