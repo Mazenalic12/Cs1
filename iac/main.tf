@@ -9,20 +9,20 @@ terraform {
 }
 
 provider "google" {
-  project = "cs1-mzn-12345"   # ✅ JOUW NIEUWE PROJECT ID
+  project = "cs1-mzn-12345" # ✅ JOUW NIEUWE PROJECT ID
   region  = "europe-west1"
   zone    = "europe-west1-b"
 }
 
 # ---- APIs activeren ----
 resource "google_project_service" "servicenetworking" {
-  project            = "cs1-mzn-12345"  # ✅ AANGEPAST
+  project            = "cs1-mzn-12345" # ✅ AANGEPAST
   service            = "servicenetworking.googleapis.com"
   disable_on_destroy = false
 }
 
 resource "google_project_service" "sqladmin" {
-  project            = "cs1-mzn-12345"  # ✅ AANGEPAST
+  project            = "cs1-mzn-12345" # ✅ AANGEPAST
   service            = "sqladmin.googleapis.com"
   disable_on_destroy = false
 }
@@ -76,3 +76,37 @@ resource "google_service_networking_connection" "private_vpc_connection" {
     google_project_service.servicenetworking
   ]
 }
+
+# ---- Cloud Run service ----
+resource "google_cloud_run_service" "frontend" {
+  name     = "frontend-service"
+  location = "europe-west1"
+  project  = "cs1-mzn-12345" # ✅ AANGEPAST
+
+  lifecycle {
+    prevent_destroy = false
+    ignore_changes  = all
+  }
+
+  template {
+    spec {
+      containers {
+        image = "gcr.io/cloudrun/hello"
+      }
+    }
+  }
+
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
+}
+
+# ---- Optioneel: IAM openstellen ----
+# resource "google_cloud_run_service_iam_member" "noauth" {
+#   location = google_cloud_run_service.frontend.location
+#   service  = google_cloud_run_service.frontend.name
+#   role     = "roles/run.invoker"
+#   member   = "allUsers"
+# }
+
