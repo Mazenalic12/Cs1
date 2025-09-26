@@ -23,9 +23,9 @@ resource "google_cloud_run_service" "frontend" {
 }
 
 # Iedereen mag de Cloud Run service aanroepen (optioneel activeren)
-# resource "google_cloud_run_service_iam_member" "noauth" {
-#   location = google_cloud_run_service.frontend.location
-#   service  = google_cloud_run_service.frontend.name
-#   role     = "roles/run.invoker"
-#   member   = "allUsers"
-# }
+resource "google_cloud_run_service_iam_member" "noauth" {
+  location = google_cloud_run_service.frontend.location
+  service  = google_cloud_run_service.frontend.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}
