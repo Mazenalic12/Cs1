@@ -1,3 +1,7 @@
+resource "google_project_service" "run_api" {
+  service = "run.googleapis.com"
+}
+
 resource "google_cloud_run_v2_service" "frontend" {
   name     = "frontend-service"
   location = var.region
@@ -10,7 +14,5 @@ resource "google_cloud_run_v2_service" "frontend" {
     service_account = var.service_account_email
   }
 
-  depends_on = [
-    google_project_service.run_api
-  ]
+  depends_on = [google_project_service.run_api]
 }
