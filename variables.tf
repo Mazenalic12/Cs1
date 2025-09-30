@@ -11,7 +11,7 @@ variable "image_url" {
 }
 
 variable "service_account_email" {
-  description = "Email of the service account to run the Cloud Run service"
+  description = "Email of the service account to use for Cloud Run"
   type        = string
   default     = "terraform-deployer@cs1-mzn-12345.iam.gserviceaccount.com"
 }
