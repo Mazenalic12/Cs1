@@ -1,8 +1,3 @@
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
-
 # 1. Maak de service account aan
 resource "google_service_account" "terraform_deployer" {
   account_id   = "terraform-deployer"
