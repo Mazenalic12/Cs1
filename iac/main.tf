@@ -1,85 +1,57 @@
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = ">= 4.0.0"
-    }
-  }
-  required_version = ">= 1.3.0"
-}
-
 provider "google" {
-  project = "cs1-mzn-12345" # ✅ JOUW NIEUWE PROJECT ID
-  region  = "europe-west1"
-  zone    = "europe-west1-b"
+  project = var.project_id
+  region  = var.region
 }
 
-# ---- APIs activeren ----
-resource "google_project_service" "servicenetworking" {
-  project            = "cs1-mzn-12345" # ✅ AANGEPAST
-  service            = "servicenetworking.googleapis.com"
-  disable_on_destroy = false
+# Enable required APIs
+resource "google_project_service" "compute" {
+  service = "compute.googleapis.com"
 }
 
-resource "google_project_service" "sqladmin" {
-  project            = "cs1-mzn-12345" # ✅ AANGEPAST
-  service            = "sqladmin.googleapis.com"
-  disable_on_destroy = false
+resource "google_project_service" "run" {
+  service = "run.googleapis.com"
 }
 
-# ---- Netwerk configuratie ----
-resource "google_compute_network" "vpc_network" {
+resource "google_project_service" "sql" {
+  service = "sqladmin.googleapis.com"
+}
+
+resource "google_project_service" "vpcaccess" {
+  service = "vpcaccess.googleapis.com"
+}
+
+# VPC Network
+resource "google_compute_network" "main-vpc" {
   name                    = "main-vpc"
   auto_create_subnetworks = false
 }
 
-resource "google_compute_subnetwork" "web_subnet" {
+# Web subnet
+resource "google_compute_subnetwork" "web" {
   name          = "web-subnet"
   ip_cidr_range = "10.10.1.0/24"
-  region        = "europe-west1"
-  network       = google_compute_network.vpc_network.id
+  region        = var.region
+  network       = google_compute_network.main-vpc.id
 }
 
-resource "google_compute_subnetwork" "db_subnet" {
+# DB subnet
+resource "google_compute_subnetwork" "db" {
   name          = "db-subnet"
   ip_cidr_range = "10.10.2.0/24"
-  region        = "europe-west1"
-  network       = google_compute_network.vpc_network.id
+  region        = var.region
+  network       = google_compute_network.main-vpc.id
 }
 
-resource "google_compute_firewall" "internal" {
-  name    = "allow-internal"
-  network = google_compute_network.vpc_network.name
+# Firewall: allow web-subnet to reach db-subnet on port 5432
+resource "google_compute_firewall" "allow_postgres" {
+  name    = "allow-web-to-db-postgres"
+  network = google_compute_network.main-vpc.name
 
   allow {
-    protocol = "all"
+    protocol = "tcp"
+    ports    = ["5432"]
   }
 
-  source_ranges = ["10.10.0.0/16"]
+  source_ranges = ["10.10.1.0/24"]
+  target_tags   = ["db"]
 }
-
-# ---- Private Service Connection ----
-resource "google_compute_global_address" "private_ip_alloc" {
-  name          = "private-ip-alloc"
-  purpose       = "VPC_PEERING"
-  address_type  = "INTERNAL"
-  prefix_length = 16
-  network       = google_compute_network.vpc_network.id
-}
-
-resource "google_service_networking_connection" "private_vpc_connection" {
-  network                 = google_compute_network.vpc_network.id
-  service                 = "services/servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.private_ip_alloc.name]
-
-  depends_on = [
-    google_project_service.servicenetworking
-  ]
-}
-
-
-
-
-
-
-
