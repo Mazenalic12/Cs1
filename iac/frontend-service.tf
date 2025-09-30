@@ -26,3 +26,4 @@ resource "google_cloud_run_v2_service" "frontend" {
     google_project_service.run_api
   ]
 }
+
