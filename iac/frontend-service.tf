@@ -1,29 +1,29 @@
-# 1. Maak de service account aan
-resource "google_service_account" "terraform_deployer" {
-  account_id   = "terraform-deployer"
-  display_name = "Terraform Deployer"
-}
-
-# 2. Activeer de Cloud Run API
-resource "google_project_service" "run_api" {
-  service = "run.googleapis.com"
-}
-
-# 3. Cloud Run service
 resource "google_cloud_run_v2_service" "frontend" {
-  name     = "frontend"
+  name     = "frontend-service"
   location = var.region
+  ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
     containers {
       image = var.image_url
+
+      ports {
+        container_port = 80
+      }
+
+      resources {
+        limits = {
+          cpu    = "1"
+          memory = "512Mi"
+        }
+      }
     }
 
-    service_account = google_service_account.terraform_deployer.email
+    service_account = var.service_account_email
   }
 
-  depends_on = [
-    google_project_service.run_api
-  ]
+  traffic {
+    percent         = 100
+    latest_revision = true
+  }
 }
-
