@@ -1,39 +1,18 @@
 resource "google_cloud_run_service" "frontend" {
   name     = "frontend-service"
-  location = var.region
+  location = "europe-west1"
+  project  = "cs1-mzn-12345"  # ✅ AANGEPAST
+
+  lifecycle {
+    prevent_destroy = false
+    ignore_changes  = all
+  }
 
   template {
     spec {
       containers {
-        image = var.image_url
-
-        env {
-          name  = "DB_HOST"
-          value = google_sql_database_instance.postgres_instance.private_ip_address
-        }
-        env {
-          name  = "DB_PORT"
-          value = "5432"
-        }
-        env {
-          name  = "DB_NAME"
-          value = google_sql_database.default.name
-        }
-        env {
-          name  = "DB_USER"
-          value = google_sql_user.appuser.name
-        }
-        env {
-          name = "DB_PASSWORD"
-          value_from {
-            secret_key_ref {
-              name = "db-password"
-              key  = "latest"
-            }
-          }
-        }
+        image = "gcr.io/cloudrun/hello"
       }
-      service_account_name = var.service_account_email
     }
   }
 
@@ -41,4 +20,12 @@ resource "google_cloud_run_service" "frontend" {
     percent         = 100
     latest_revision = true
   }
+}
+
+# Iedereen mag de Cloud Run service aanroepen (optioneel activeren)
+resource "google_cloud_run_service_iam_member" "noauth" {
+  location = google_cloud_run_service.frontend.location
+  service  = google_cloud_run_service.frontend.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
 }
