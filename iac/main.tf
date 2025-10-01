@@ -1,11 +1,4 @@
 terraform {
-  backend "gcs" {
-    bucket = "cs1-tf-state-12345"   # <-- jouw bucketnaam
-    prefix = "terraform/state"      # mapje in de bucket
-  }
-}
-
-terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
@@ -95,4 +88,5 @@ resource "google_service_networking_connection" "private_vpc_connection" {
     google_project_service.servicenetworking
   ]
 }
+
 
