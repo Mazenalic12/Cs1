@@ -3,15 +3,14 @@ terraform {
     bucket = "cs1-tf-state-12345"
     prefix = "cs1/state"
   }
-}
 
-terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
       version = ">= 4.0.0"
     }
   }
+
   required_version = ">= 1.3.0"
 }
 
@@ -95,14 +94,3 @@ resource "google_service_networking_connection" "private_vpc_connection" {
     google_project_service.servicenetworking
   ]
 }
-
-# ---- Cloud Run Service (bestaande service koppelen) ----
-resource "google_cloud_run_service" "frontend" {
-  name     = "frontend-service"    # <-- matcht met je bestaande service
-  location = "europe-west1"
-  project  = "cs1-mzn-12345"
-
-  template {
-    spec {
-      containers {
-        image = "gcr.io/c
