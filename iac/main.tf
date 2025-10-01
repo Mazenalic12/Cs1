@@ -96,6 +96,13 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   ]
 }
 
+# ---- Cloud Run Service (bestaande service koppelen) ----
+resource "google_cloud_run_service" "frontend" {
+  name     = "frontend-service"    # <-- matcht met je bestaande service
+  location = "europe-west1"
+  project  = "cs1-mzn-12345"
 
-
-
+  template {
+    spec {
+      containers {
+        image = "gcr.io/c
