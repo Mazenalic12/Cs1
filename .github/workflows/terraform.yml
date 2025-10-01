@@ -2,65 +2,72 @@ name: Terraform GCP
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
   pull_request:
+  workflow_dispatch:
+
+env:
+  TF_WORKING_DIR: iac
 
 jobs:
-  terraform:
-    name: Terraform
+  validate_and_plan:
+    name: Validate & Plan
     runs-on: ubuntu-latest
 
     steps:
-      # Stap 1: Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Stap 2: Authenticate with Google Cloud
       - name: Authenticate to Google Cloud
+        id: auth
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # Stap 3: Set up Terraform
-      - name: Setup Terraform
+      - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.5.7
+          terraform_version: 1.6.0
 
-      # Stap 4: Terraform Init
       - name: Terraform Init
-        run: terraform -chdir=iac init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -reconfigure
 
-      # Stap 5: Terraform Format (non-blocking)
-      - name: Terraform Format
-        run: terraform -chdir=iac fmt -diff -check || true
 
-      # Stap 6: Terraform Validate
       - name: Terraform Validate
-        run: terraform -chdir=iac validate
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform validate
 
-      # Stap 7: Terraform Plan
       - name: Terraform Plan
-        run: terraform -chdir=iac plan -out=tfplan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform plan -input=false
 
-      # Stap 8: Upload Plan (artifact v4 fix)
-      - name: Upload Plan
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+  apply:
+    name: Apply
+    needs: validate_and_plan
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
         with:
-          name: tf-plan
-          path: iac/tfplan
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      # Stap 9: Download Plan (artifact v4 fix)
-      - name: Download Plan
-        if: github.ref == 'refs/heads/main'
-        uses: actions/download-artifact@v4
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
         with:
-          name: tf-plan
-          path: iac/
+          terraform_version: 1.6.0
 
-      # Stap 10: Terraform Apply (alleen op main)
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init -reconfigure
+
+
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        run: terraform -chdir=iac apply -auto-approve tfplan
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve
