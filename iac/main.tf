@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "mijn-terraform-state"
+    bucket = "cs1-tf-state-12345"
     prefix = "cs1/state"
   }
 }
@@ -95,6 +95,7 @@ resource "google_service_networking_connection" "private_vpc_connection" {
     google_project_service.servicenetworking
   ]
 }
+
 
 
 
