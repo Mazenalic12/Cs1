@@ -29,7 +29,7 @@ jobs:
       - name: Terraform Init
         run: terraform -chdir=iac init -input=false
 
-      # === NIEUW TOEGEVOEGD: IMPORT STAPPEN ===
+      # === IMPORT STAPPEN (voegen bestaande resources toe aan state) ===
       - name: Import VPC
         run: terraform -chdir=iac import google_compute_network.vpc_network projects/cs1-mzn-12345/global/networks/main-vpc || true
 
@@ -53,11 +53,11 @@ jobs:
         run: terraform -chdir=iac fmt -check
 
       - name: Terraform Plan
-        run: terraform -chdir=iac plan -input=false
+        run: terraform -chdir=iac plan -input=false -out=tfplan
 
       - name: Upload Plan
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4   # ✅ FIX naar v4
         with:
           name: tf-plan
           path: iac/tfplan
