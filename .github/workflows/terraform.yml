@@ -1,4 +1,4 @@
-name: Terraform
+name: Terraform GCP
 
 on:
   push:
@@ -8,60 +8,59 @@ on:
 
 jobs:
   terraform:
-    name: 'Terraform'
+    name: Terraform
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
+      # Stap 1: Checkout repository
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-
+      # Stap 2: Authenticate with Google Cloud
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
+      # Stap 3: Set up Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      # Stap 4: Terraform Init
       - name: Terraform Init
-        run: terraform -chdir=iac init -input=false
+        run: terraform -chdir=iac init
 
-      # === IMPORT STAPPEN (voegen bestaande resources toe aan state) ===
-      - name: Import VPC
-        run: terraform -chdir=iac import google_compute_network.vpc_network projects/cs1-mzn-12345/global/networks/main-vpc || true
+      # Stap 5: Terraform Format (non-blocking)
+      - name: Terraform Format
+        run: terraform -chdir=iac fmt -diff -check || true
 
-      - name: Import Subnet Web
-        run: terraform -chdir=iac import google_compute_subnetwork.web_subnet projects/cs1-mzn-12345/regions/europe-west1/subnetworks/web-subnet || true
-
-      - name: Import Subnet DB
-        run: terraform -chdir=iac import google_compute_subnetwork.db_subnet projects/cs1-mzn-12345/regions/europe-west1/subnetworks/db-subnet || true
-
-      - name: Import Cloud SQL
-        run: terraform -chdir=iac import google_sql_database_instance.postgres_instance projects/cs1-mzn-12345/instances/my-postgres-db || true
-
-      - name: Import Cloud Run frontend
-        run: terraform -chdir=iac import google_cloud_run_service.frontend projects/cs1-mzn-12345/locations/europe-west1/services/frontend-service || true
-      # === EINDE IMPORT ===
-
+      # Stap 6: Terraform Validate
       - name: Terraform Validate
         run: terraform -chdir=iac validate
 
-      - name: Terraform Format
-        run: terraform -chdir=iac fmt -check
-
+      # Stap 7: Terraform Plan
       - name: Terraform Plan
-        run: terraform -chdir=iac plan -input=false -out=tfplan
+        run: terraform -chdir=iac plan -out=tfplan
 
+      # Stap 8: Upload Plan (artifact v4 fix)
       - name: Upload Plan
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4   # ✅ FIX naar v4
+        uses: actions/upload-artifact@v4
         with:
           name: tf-plan
           path: iac/tfplan
 
+      # Stap 9: Download Plan (artifact v4 fix)
+      - name: Download Plan
+        if: github.ref == 'refs/heads/main'
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-plan
+          path: iac/
+
+      # Stap 10: Terraform Apply (alleen op main)
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main'
-        run: terraform -chdir=iac apply -auto-approve -input=false
+        run: terraform -chdir=iac apply -auto-approve tfplan
