@@ -1,7 +1,7 @@
 resource "google_cloud_run_service" "frontend" {
   name     = "frontend-service"
   location = "europe-west1"
-  project  = "cs1-mzn-12345"  # ✅ AANGEPAST
+  project  = "cs1-mzn-12345"  
 
   lifecycle {
     prevent_destroy = false
@@ -22,10 +22,11 @@ resource "google_cloud_run_service" "frontend" {
   }
 }
 
-# Iedereen mag de Cloud Run service aanroepen (optioneel activeren)
+# Iedereen mag de Cloud Run service aanroepen 
 resource "google_cloud_run_service_iam_member" "noauth" {
   location = google_cloud_run_service.frontend.location
   service  = google_cloud_run_service.frontend.name
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
+
